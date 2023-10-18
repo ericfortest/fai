@@ -1,0 +1,80 @@
+---
+  - name: printer
+    hosts: localhost
+    become: true
+    tasks:
+
+       - name: Creates directory
+         file:
+           path: /tmp/printer_driver
+           state: directory
+
+       - name: Downloads smbclients
+         apt:
+            name: smbclient
+            state: latest
+
+       - name: Downloads Drivers
+         ansible.builtin.get_url:
+            url: https://www.kyoceradocumentsolutions.eu/content/download-center/eu/drivers/all/Linux_Universal_Driver_zip.download.zip
+            dest: /tmp/printer_driver/
+
+       - name: Download Cups
+         apt:
+           name: cups
+           state: latest
+
+       - name: Download Zip
+         apt:
+           name: zip
+           state: latest
+
+       - name: Download unzip
+         apt:
+           name: unzip
+           state: latest
+
+       - name: Download Python
+         apt:
+           name: python3
+           state: latest
+
+       - name: Download Python-Reportlab
+         apt:
+           name: python3-reportlab
+           state: latest
+
+       - name:  Unarchive the file Linux_Universal_Driver.zip
+         ansible.builtin.unarchive:
+            src: /tmp/printer_driver/Linux_Universal_Driver.zip
+            dest: /tmp/printer_driver/
+            remote_src: yes
+
+       - name: Delete Linux_Universal_Driver.zip
+         file:
+           state: absent
+           path: /tmp/printer_driver/Linux_Universal_Driver_zip.zip
+
+       - name: Unarchive the file KyoceraLinuxPackages-20230720.tar.gz
+         ansible.builtin.unarchive:
+           src: /tmp/printer_driver/KyoceraLinuxPackages-20230720.tar.gz
+           dest: /tmp/printer_driver/
+           remote_src: yes
+
+       - name: KyoceraLinuxPackages-20230720.tar.gz
+         file:
+          state: absent
+          path: /tmp/printer_driver/KyoceraLinuxPackages-20230720.tar.gz
+
+       - name: Install a .deb package
+         ansible.builtin.apt:
+            deb: /tmp/printer_driver/Ubuntu/EU/kyodialog_amd64/kyodialog_9.3-0_amd64.deb
+
+       - name: deletes printer_driver
+         file:
+          state: absent
+          path: /tmp/printer_driver/
+
+       - name: Adds the printer
+         ansible.builtin.shell:
+            cmd: lpadmin -p UnitPrintbe01 -E -v smb://uniprintbe01.united.domain/uniprintbe01-color -m kyocera/Kyocera_TASKalfa_4053ci.ppd
